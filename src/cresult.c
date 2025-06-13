@@ -16,36 +16,31 @@ void cresult_error_print(cresult_error err) {
   printf("LINE NUMBER: %ld\n", err.line_number);
 }
 
-cresult_result* cresult_result_success(void* data, void (*destructor)(void*)) {
-  cresult_result* buffer = malloc(sizeof(cresult_result));
-  buffer->data = data;
-  buffer->destructor = destructor;
-  buffer->is_err = false;
-  return buffer;
+cresult_result cresult_result_success(void* data) {
+  cresult_result result;
+  result.data = data;
+  result.is_err = false;
+  return result;
 }
 
-cresult_result* cresult_result_failure(cresult_error err) {
-  cresult_result* buffer = malloc(sizeof(cresult_result));
-  buffer->data = NULL;
-  buffer->destructor = NULL;
-  buffer->is_err = true;
-  buffer->err = err;
-  return buffer;
+cresult_result cresult_result_failure(cresult_error err) {
+  cresult_result result;
+  result.data = NULL;
+  result.is_err = true;
+  result.err = err;
+  return result;
 }
 
-void cresult_result_destroy(cresult_result* result) {
-  if (!result) return;
-  if (!result->is_err && result->destructor) {
-    result->destructor(result->data);
-  }
-  free(result);
-}
-
-cresult_result* cresult_result_force(cresult_result* result) {
-  if (result->is_err) {
-    cresult_error_print(result->err);
-    free(result);
+cresult_result cresult_result_force(cresult_result result) {
+  if (result.is_err) {
+    cresult_error_print(result.err);
     exit(EXIT_FAILURE);
   }
   return result;
 }
+
+void* cresult_result_take(cresult_result* result) {
+  void* data = result->data;
+  result->data = NULL;
+  return data;
+} 
